@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>State Economic Impact Calculator</title>
+<meta name="description" content="Estimate the direct, indirect, and induced jobs, income, and output created by new spending in any industry, in any U.S. state.">
+<style>
+  :root {
+    --navy: #0B1575;
+    --tan: #EBC77F;
+    --tan-soft: #F6E6C4;
+    --bg: #FAFAF7;
+    --surface: #FFFFFF;
+    --text: #16181D;
+    --muted: #5B6070;
+    --line: #E3E1DA;
+    --focus: #3B4BD8;
+    --danger: #B42318;
+    --accent: var(--navy);
+    --accent-text: #FFFFFF;
+    --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --navy: #9AA5FF;
+      --tan: #D9B466;
+      --tan-soft: #3A3222;
+      --bg: #111318;
+      --surface: #1A1D24;
+      --text: #ECEDF1;
+      --muted: #A2A7B5;
+      --line: #2C303A;
+      --focus: #9AA5FF;
+      --danger: #FF8A7A;
+      --accent: #9AA5FF;
+      --accent-text: #0B0E1A;
+    }
+  }
+  :root[data-theme="dark"] {
+    --navy: #9AA5FF; --tan: #D9B466; --tan-soft: #3A3222; --bg: #111318;
+    --surface: #1A1D24; --text: #ECEDF1; --muted: #A2A7B5; --line: #2C303A;
+    --focus: #9AA5FF; --danger: #FF8A7A; --accent: #9AA5FF; --accent-text: #0B0E1A;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 16px; }
+
+  header.hero { padding: 56px 0 28px; }
+  .eyebrow { color: var(--muted); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; margin: 0 0 10px; }
+  h1 { color: var(--navy); font-size: clamp(30px, 5vw, 44px); line-height: 1.1; margin: 0 0 14px; letter-spacing: -.01em; }
+  .lede { font-size: 18px; color: var(--muted); max-width: 680px; margin: 0; }
+  .lede strong { color: var(--text); font-weight: 600; }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; }
+  h2 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: 14px; margin: 0 0 20px; }
+
+  label, .label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+  select, input[type="number"] {
+    width: 100%; font: inherit; color: var(--text); background: var(--surface);
+    border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; min-height: 44px;
+  }
+  select:focus-visible, input:focus-visible, button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  .row-top { display: grid; grid-template-columns: 1fr 150px auto; gap: 16px; align-items: end; margin-bottom: 20px; }
+  .hint { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+  .check { display: flex; gap: 10px; align-items: flex-start; margin: -4px 0 20px; cursor: pointer; }
+  .check input { width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--accent); flex: none; cursor: pointer; }
+  .check strong { display: block; font-size: 15px; }
+  .check span span { font-size: 13px; color: var(--muted); }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .seg button { font: inherit; font-size: 14px; border: 0; background: transparent; color: var(--muted); padding: 0 14px; min-height: 44px; cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-text); }
+
+  .lines { display: grid; gap: 10px; }
+  .line, .col-heads { display: grid; grid-template-columns: 1fr 150px 110px 44px; gap: 10px; align-items: center; }
+  .line .amount { position: relative; }
+  .line .amount input { padding-left: 26px; }
+  .line .amount .unit { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 14px; pointer-events: none; }
+  .pct { position: relative; }
+  .pct input { padding-right: 28px; }
+  .pct .unit { position: absolute; right: 11px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 14px; pointer-events: none; }
+  .jobs-mode .line, .jobs-mode .col-heads { grid-template-columns: 1fr 150px 44px; }
+  .jobs-mode .amount input { padding-left: 12px; }
+  .jobs-mode .amount .unit, .jobs-mode .pct, .jobs-mode .pct-head { display: none; }
+  .icon-btn { width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; font-size: 20px; line-height: 1; }
+  .icon-btn:hover { color: var(--danger); border-color: var(--danger); }
+
+  .actions { display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-top: 16px; flex-wrap: wrap; }
+  .link-btn { font: inherit; font-size: 14px; background: none; border: 0; color: var(--navy); cursor: pointer; padding: 8px 0; font-weight: 600; }
+  .run {
+    font: inherit; font-weight: 700; font-size: 16px; background: var(--accent); color: var(--accent-text);
+    border: 0; border-radius: 8px; padding: 0 28px; min-height: 48px; cursor: pointer;
+  }
+  .run:disabled { opacity: .6; cursor: progress; }
+  .error { color: var(--danger); font-size: 14px; margin: 10px 0 0; min-height: 1em; }
+
+  #results { margin-top: 28px; display: none; }
+  #results.show { display: block; }
+  .results-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .results-head h2 { font-size: 22px; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .kpi { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+  .kpi .v { font-size: 28px; font-weight: 700; color: var(--navy); font-variant-numeric: tabular-nums; line-height: 1.15; }
+  .kpi .k { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .kpi .m { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+  .grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+  .chart-bars { display: grid; gap: 14px; margin-top: 8px; }
+  .bar-row { display: grid; grid-template-columns: 76px 1fr; gap: 12px; align-items: center; font-size: 14px; }
+  .bar-track { position: relative; height: 30px; }
+  .bar { height: 100%; border-radius: 0 4px 4px 0; background: var(--tan); min-width: 2px; }
+  .bar.direct { background: var(--navy); }
+  .bar-val { position: absolute; top: 50%; transform: translateY(-50%); font-weight: 600; font-variant-numeric: tabular-nums; padding-left: 8px; white-space: nowrap; }
+  .metric-tabs { margin-bottom: 12px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+  th, td { padding: 9px 8px; border-bottom: 1px solid var(--line); text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+  tr.total td { font-weight: 700; border-bottom: 0; }
+  .table-scroll { overflow-x: auto; }
+  .mini { display: inline-block; height: 8px; border-radius: 2px; background: var(--tan); vertical-align: middle; margin-right: 8px; }
+  td.ind { max-width: 320px; }
+
+  .note { font-size: 13px; color: var(--muted); margin-top: 14px; }
+  details { border-top: 1px solid var(--line); padding: 16px 0; }
+  details summary { cursor: pointer; font-weight: 600; font-size: 16px; }
+  details p, details li { color: var(--muted); font-size: 15px; }
+  section.about { margin: 40px 0 24px; }
+  footer { color: var(--muted); font-size: 13px; padding: 24px 0 48px; border-top: 1px solid var(--line); }
+  a { color: var(--navy); }
+
+  @media (max-width: 760px) {
+    header.hero { padding: 36px 0 20px; }
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .grid2 { grid-template-columns: minmax(0, 1fr); }
+    .row-top { grid-template-columns: 1fr 1fr; }
+    .row-top > :first-child { grid-column: 1 / -1; }
+    .line, .col-heads { grid-template-columns: 1fr 110px 90px 44px; }
+    .jobs-mode .line, .jobs-mode .col-heads { grid-template-columns: 1fr 110px 44px; }
+    .card { padding: 18px; }
+    .kpi .v { font-size: 24px; }
+    th, td { padding: 8px 5px; font-size: 13px; }
+    th { font-size: 11px; letter-spacing: 0; }
+  }
+  @media (max-width: 420px) {
+    .row-top { grid-template-columns: 1fr; }
+    .line, .jobs-mode .line { grid-template-columns: 1fr 1fr 44px; }
+    .line select { grid-column: 1 / 3; }
+    .jobs-mode .line .amount { grid-column: 1 / 3; }
+    .line .icon-btn { grid-row: 1 / span 2; grid-column: 3; height: 100%; }
+    .col-heads { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <p class="eyebrow">Input-output model &middot; all 50 states + DC</p>
+  <h1>State Economic Impact Calculator</h1>
+  <p class="lede">Estimate how new spending in one industry ripples through a state's economy. You get <strong>direct</strong> jobs in that industry, <strong>indirect</strong> jobs at its in-state suppliers, and <strong>induced</strong> jobs supported when workers spend their paychecks.</p>
+</header>
+
+<main>
+<form class="card" id="form" novalidate>
+  <h2>Scenario</h2>
+  <p class="sub">Choose a state, then enter the new spending, or the direct jobs it creates, for one or more industries. Only spending with businesses in the state creates jobs there, so set <strong>% in-state</strong> for anything bought from outside it.</p>
+
+  <div class="row-top">
+    <div>
+      <label for="state">State</label>
+      <select id="state" required></select>
+    </div>
+    <div>
+      <label for="years">Build period (years)</label>
+      <input type="number" id="years" inputmode="decimal" min="0.1" max="50" step="any" value="1">
+    </div>
+    <div>
+      <span class="label" id="mode-label">Size scenario by</span>
+      <div class="seg" role="group" aria-labelledby="mode-label">
+        <button type="button" data-mode="usd" aria-pressed="true">Spending ($M)</button>
+        <button type="button" data-mode="jobs" aria-pressed="false">Direct jobs</button>
+      </div>
+    </div>
+  </div>
+
+  <label class="check" for="se">
+    <input type="checkbox" id="se" checked>
+    <span><strong>Count self-employed workers (IMPLAN-style)</strong>
+      <span>Adds proprietors' jobs and income, which matters for home-based child care, construction, real estate, and rideshare. Turn off for large industrial projects built by big contractors, or to count payroll jobs only.</span></span>
+  </label>
+
+  <div class="col-heads" aria-hidden="true">
+    <span class="label">Industry</span>
+    <span class="label" id="amount-head">Total ($ millions)</span>
+    <span class="label pct-head">% in-state</span>
+    <span></span>
+  </div>
+  <div class="lines" id="lines"></div>
+
+  <div class="actions">
+    <button type="button" class="link-btn" id="add">+ Add another industry</button>
+    <button type="submit" class="run" id="run">Run</button>
+  </div>
+  <p class="hint">Enter the total over the whole build period. Results show average jobs per year, and dollar totals cover the whole period.</p>
+  <p class="error" id="error" role="alert"></p>
+</form>
+
+<section id="results" aria-live="polite">
+  <div class="results-head">
+    <h2 id="results-title">Results</h2>
+    <button type="button" class="link-btn" id="download">Download CSV</button>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid2">
+    <div class="card">
+      <h2>Where the jobs come from</h2>
+      <p class="sub" id="chart-sub">Jobs by type of effect</p>
+      <div class="seg metric-tabs" role="group" aria-label="Metric">
+        <button type="button" data-metric="jobs" aria-pressed="true">Jobs</button>
+        <button type="button" data-metric="labor" aria-pressed="false">Income</button>
+        <button type="button" data-metric="va" aria-pressed="false">GDP</button>
+        <button type="button" data-metric="output" aria-pressed="false">Output</button>
+      </div>
+      <div class="chart-bars" id="bars"></div>
+    </div>
+    <div class="card">
+      <h2>Summary</h2>
+      <p class="sub">Dollar figures in millions</p>
+      <div class="table-scroll"><table id="summary"></table></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h2>Industries gaining indirect &amp; induced jobs</h2>
+    <p class="sub" id="industry-sub">The top 15 industries by spillover jobs. Direct jobs are excluded.</p>
+    <div class="table-scroll"><table id="by-industry"></table></div>
+  </div>
+  <p class="note" id="multiplier-note"></p>
+</section>
+
+<section class="about">
+  <details>
+    <summary>How it works</summary>
+    <p>This is a regional input-output (Leontief) model built from public data. National BEA tables show what each of 71 industries buys from every other industry. The model scales those purchases to each state with Flegg location quotients (FLQ), which estimate how much of each purchase stays in the state instead of going to suppliers elsewhere.</p>
+    <ul>
+      <li><strong>Direct:</strong> the new spending, and the jobs, pay, and GDP in the industry that receives it.</li>
+      <li><strong>Indirect:</strong> the extra activity at in-state suppliers, their suppliers, and so on down the chain (Type I minus direct).</li>
+      <li><strong>Induced:</strong> the activity supported when workers in those industries spend their pay at in-state businesses (Type II minus Type I).</li>
+    </ul>
+    <p><strong>% in-state</strong> is the share of each line bought from businesses in the state. Equipment made elsewhere, out-of-state contractors, and imports create no jobs in the state, so leave them out. The <strong>build period</strong> spreads the total over time: a "job" is one job for one year, so 4,000 job-years over 4 years is about 1,000 jobs in an average year. The peak workforce is higher.</p>
+    <p><strong>Spending</strong> means new final demand for an industry's output. For operating funds, like child care subsidies, use the service industry (Social assistance). To build something, use Construction.</p>
+  </details>
+  <details>
+    <summary>Assumptions and limitations</summary>
+    <ul>
+      <li>Payroll jobs come from BLS QCEW (jobs covered by unemployment insurance), plus railroads. With <em>Count self-employed workers</em> on, the model adds proprietors the way IMPLAN does. It uses BEA's state totals of self-employed jobs and income, split across industries with Census Nonemployer Statistics. These are counts of jobs, not full-time equivalents, and many self-employed jobs are part-time or side work, such as rideshare driving. Military jobs are not counted.</li>
+      <li>Labor income is employee compensation (wages, salaries, and benefits), plus proprietors' income when self-employed workers are counted.</li>
+      <li>The model assumes each industry's inputs, prices, and in-state purchase shares stay fixed, and that supply can always expand to meet demand. It measures the activity the spending supports, not net new jobs. It doesn't account for spending cut elsewhere to pay for the investment.</li>
+      <li>How much spending leaks out of the state is set by the FLQ parameter &delta; = <span id="delta"></span>. Higher values produce smaller multipliers, especially in small states.</li>
+    </ul>
+  </details>
+  <details>
+    <summary>Data sources</summary>
+    <ul>
+      <li>BEA Input-Output Accounts, summary Make and Use tables, <span class="yr"></span></li>
+      <li>BEA Regional Accounts: GDP by state (SAGDP2), compensation (SAGDP4), personal income (SAINC4), and personal consumption (SAPCE1)</li>
+      <li>BEA earnings and compensation by industry (SAINC5N, SAINC6N) and proprietors' employment (SAINC4, CAEMP25N)</li>
+      <li>BLS Quarterly Census of Employment and Wages; BLS Current Employment Statistics (rail)</li>
+      <li>Census Bureau Nonemployer Statistics</li>
+    </ul>
+  </details>
+</section>
+</main>
+
+<footer>
+  Built from public BEA and BLS data (<span class="yr"></span> accounts). All results are model estimates.
+</footer>
+</div>
+
+<script>
+(() => {
+  const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+
+  let meta = null;
+  let mode = "usd";
+  let metric = "jobs";
+  let last = null;               // last result, for re-rendering and CSV
+  const cache = {};
+
+  const fmtInt = n => Math.round(n).toLocaleString("en-US");
+  const fmtM = n => "$" + (Math.abs(n) >= 100 ? Math.round(n).toLocaleString("en-US")
+                                              : n.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })) + "M";
+  const METRICS = {
+    jobs:   { label: "Jobs",            fmt: fmtInt },
+    labor:  { label: "Labor income",    fmt: fmtM },
+    va:     { label: "Value added (GDP)", fmt: fmtM },
+    output: { label: "Output",          fmt: fmtM },
+  };
+  const EFFECTS = ["Direct", "Indirect", "Induced"];
+
+  // ---- Setup ---------------------------------------------------------------
+
+  async function init() {
+    meta = await fetch("data/meta.json").then(r => r.json());
+    $("#delta").textContent = meta.flq_delta;
+    $$(".yr").forEach(el => el.textContent = meta.year);
+
+    $("#state").innerHTML = meta.states
+      .map(s => `<option value="${s.code}">${s.name}</option>`).join("");
+
+    const fromHash = readHash();
+    $("#state").value = fromHash?.state || "PA";
+    $("#years").value = fromHash?.years || 1;
+    $("#se").checked = fromHash ? fromHash.se : true;
+    setMode(fromHash?.mode || "usd");
+    const lines = fromHash?.lines?.length ? fromHash.lines : [{ code: "624", amount: 100, pct: 100 }];
+    lines.forEach(l => addLine(l.code, l.amount, l.pct));
+    if (fromHash) run();
+  }
+
+  function industryOptions(selected) {
+    const groups = {};
+    meta.industries.forEach(i => (groups[i.sector] ||= []).push(i));
+    return Object.keys(groups).sort().map(g =>
+      `<optgroup label="${g}">` + groups[g].map(i =>
+        `<option value="${i.code}"${i.code === selected ? " selected" : ""}>${i.name}</option>`).join("") +
+      `</optgroup>`).join("");
+  }
+
+  function addLine(code = "624", amount = "", pct = 100) {
+    const n = $$(".line").length + 1;
+    const div = document.createElement("div");
+    div.className = "line";
+    div.innerHTML = `
+      <select aria-label="Industry ${n}">${industryOptions(code)}</select>
+      <div class="amount"><span class="unit">$</span>
+        <input type="number" class="amt" inputmode="decimal" min="0" step="any" value="${amount}" aria-label="Amount ${n}" placeholder="0"></div>
+      <div class="pct"><input type="number" class="share" inputmode="decimal" min="0" max="100" step="any" value="${pct}" aria-label="Percent spent in-state ${n}"><span class="unit">%</span></div>
+      <button type="button" class="icon-btn" aria-label="Remove industry ${n}" title="Remove">&times;</button>`;
+    $("button", div).addEventListener("click", () => {
+      if ($$(".line").length > 1) div.remove();
+    });
+    $("#lines").appendChild(div);
+  }
+
+  function setMode(m) {
+    mode = m;
+    $$("[data-mode]").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === m));
+    $("#form").classList.toggle("jobs-mode", m === "jobs");
+    $("#amount-head").textContent = m === "jobs" ? "Direct jobs (total)" : "Total ($ millions)";
+  }
+
+  // ---- Model ---------------------------------------------------------------
+
+  async function loadState(code) {
+    if (!cache[code]) cache[code] = fetch(`data/${code}.json`).then(r => {
+      if (!r.ok) throw new Error("Could not load data for " + code);
+      return r.json();
+    });
+    return cache[code];
+  }
+
+  const matVec = (M, y) => M.map(row => row.reduce((s, v, j) => s + v * y[j], 0));
+
+  function impact(model, { mode, lines, se }) {
+    const jobsCoef = se ? model.jobs_se : model.jobs;
+    const laborCoef = se ? model.labor_se : model.labor;
+    const L2 = se ? model.L2_se : model.L2;
+    const n = meta.industries.length;
+    const idx = Object.fromEntries(meta.industries.map((d, i) => [d.code, i]));
+    const y = new Array(n).fill(0);
+    for (const l of lines) {
+      const i = idx[l.code];
+      const spend = mode === "jobs" ? (jobsCoef[i] > 0 ? l.amount / jobsCoef[i] : 0)
+                                    : l.amount * l.pct / 100;
+      y[i] += spend;
+    }
+    const x1 = matVec(model.L1, y), x2 = matVec(L2, y);
+    const rows = meta.industries.map((d, i) => {
+      const out = { Direct: y[i], Indirect: x1[i] - y[i], Induced: x2[i] - x1[i] };
+      const r = { code: d.code, name: d.name };
+      for (const e of EFFECTS) r[e] = {
+        output: out[e],
+        jobs: out[e] * jobsCoef[i],
+        labor: out[e] * laborCoef[i],
+        va: out[e] * model.va[i],
+      };
+      return r;
+    });
+    const summary = {};
+    for (const e of [...EFFECTS, "Total"]) summary[e] = { output: 0, jobs: 0, labor: 0, va: 0 };
+    rows.forEach(r => EFFECTS.forEach(e => Object.keys(METRICS).forEach(k => {
+      summary[e][k] += r[e][k]; summary.Total[k] += r[e][k];
+    })));
+    return { rows, summary };
+  }
+
+  // ---- Run -----------------------------------------------------------------
+
+  function readForm() {
+    const lines = $$(".line").map(l => ({
+      code: $("select", l).value,
+      amount: parseFloat($(".amt", l).value),
+      pct: mode === "jobs" ? 100 : parseFloat($(".share", l).value),
+    })).filter(l => Number.isFinite(l.amount) && l.amount > 0);
+    return { state: $("#state").value, mode, years: parseFloat($("#years").value), se: $("#se").checked, lines };
+  }
+
+  async function run() {
+    const form = readForm();
+    $("#error").textContent = "";
+    if (!form.lines.length) {
+      $("#error").textContent = mode === "jobs" ? "Enter the number of direct jobs for at least one industry."
+                                                : "Enter a spending amount for at least one industry.";
+      return;
+    }
+    if (form.lines.some(l => !Number.isFinite(l.pct) || l.pct < 0 || l.pct > 100)) {
+      $("#error").textContent = "% in-state must be between 0 and 100.";
+      return;
+    }
+    if (!Number.isFinite(form.years) || form.years <= 0 || form.years > 50) {
+      $("#error").textContent = "Build period must be between 0.1 and 50 years.";
+      return;
+    }
+    const btn = $("#run");
+    btn.disabled = true; btn.textContent = "Running…";
+    try {
+      const model = await loadState(form.state);
+      last = { ...form, ...impact(model, form) };
+      render();
+      writeHash(form);
+      $("#results").classList.add("show");
+      $("#results").scrollIntoView({ behavior: "smooth", block: "start" });
+    } catch (err) {
+      $("#error").textContent = err.message;
+    } finally {
+      btn.disabled = false; btn.textContent = "Run";
+    }
+  }
+
+  // ---- Render --------------------------------------------------------------
+
+  function render() {
+    const { summary, rows, state, lines, years } = last;
+    const stateName = meta.states.find(s => s.code === state).name;
+    const s = summary, t = s.Total;
+    const multiYear = years !== 1;
+    const total = lines.reduce((a, l) => a + l.amount, 0);
+    const inState = lines.reduce((a, l) => a + l.amount * l.pct / 100, 0);
+    let input = last.mode === "jobs" ? `${fmtInt(total)} direct ${multiYear ? "job-years" : "jobs"}`
+      : inState < total - 1e-9 ? `${fmtM(total)} project, ${fmtM(inState)} spent in-state`
+      : `${fmtM(total)} of new spending`;
+    if (multiYear) input += `${input.includes(",") ? "," : ""} over ${years} years`;
+    $("#results-title").textContent = `${stateName}: ${input}`;
+
+    const jobsKpi = multiYear
+      ? ["jobs", "Jobs per year (average)", `${fmtInt(t.jobs)} job-years over ${years} years`]
+      : ["jobs", "Total jobs", `${(t.jobs / s.Direct.jobs).toFixed(2)}× direct jobs`];
+    $("#kpis").innerHTML = [
+      jobsKpi,
+      ["labor",  "Labor income",      `${fmtM(s.Direct.labor)} direct`],
+      ["va",     "Value added (GDP)", `${fmtM(s.Direct.va)} direct`],
+      ["output", "Total output",      `${(t.output / s.Direct.output).toFixed(2)}× direct spending`],
+    ].map(([k, label, m]) =>
+      `<div class="kpi"><div class="v">${METRICS[k].fmt(k === "jobs" ? t[k] / years : t[k])}</div><div class="k">${label}</div><div class="m">${m}</div></div>`
+    ).join("");
+
+    renderBars();
+
+    $("#summary").innerHTML =
+      `<thead><tr><th>Effect</th>${multiYear ? "<th>Jobs/yr</th><th>Job-yrs</th>" : "<th>Jobs</th>"}` +
+      `<th>Income</th><th>GDP</th><th>Output</th></tr></thead><tbody>` +
+      [...EFFECTS, "Total"].map(e =>
+        `<tr class="${e === "Total" ? "total" : ""}"><td>${e}</td>` +
+        (multiYear ? `<td>${fmtInt(s[e].jobs / years)}</td><td>${fmtInt(s[e].jobs)}</td>` : `<td>${fmtInt(s[e].jobs)}</td>`) +
+        `<td>${fmtM(s[e].labor)}</td><td>${fmtM(s[e].va)}</td><td>${fmtM(s[e].output)}</td></tr>`).join("") +
+      `</tbody>`;
+
+    $("#industry-sub").textContent = `The top 15 industries by spillover ${multiYear ? "jobs per year" : "jobs"}. Direct jobs are excluded.`;
+    const spill = rows.map(r => ({ name: r.name, ind: r.Indirect.jobs / years, inu: r.Induced.jobs / years }))
+      .map(r => ({ ...r, tot: r.ind + r.inu }))
+      .filter(r => r.tot > 0.05).sort((a, b) => b.tot - a.tot).slice(0, 15);
+    const maxT = Math.max(...spill.map(r => r.tot), 1);
+    $("#by-industry").innerHTML =
+      `<thead><tr><th>Industry</th><th>Indirect</th><th>Induced</th><th>Total</th></tr></thead><tbody>` +
+      spill.map(r => `<tr><td class="ind"><span class="mini" style="width:${Math.max(2, 60 * r.tot / maxT)}px"></span>${r.name}</td>` +
+        `<td>${fmtInt(r.ind)}</td><td>${fmtInt(r.inu)}</td><td><strong>${fmtInt(r.tot)}</strong></td></tr>`).join("") +
+      `</tbody>`;
+
+    $("#multiplier-note").textContent =
+      `Every 100 direct jobs support about ${fmtInt(100 * (t.jobs / s.Direct.jobs - 1))} more in ${stateName}. ` +
+      `${last.se ? "Jobs include the self-employed; labor income includes proprietors' income." : "Wage and salary jobs only; labor income is employee compensation."} ` +
+      `Model year ${meta.year}; FLQ δ = ${meta.flq_delta}.`;
+  }
+
+  function renderBars() {
+    const s = last.summary, m = METRICS[metric];
+    const perYear = metric === "jobs" && last.years !== 1;
+    const val = e => perYear ? s[e].jobs / last.years : s[e][metric];
+    $("#chart-sub").textContent = perYear ? `Average jobs per year over ${last.years} years, by type of effect`
+                                          : `${m.label} by type of effect`;
+    const max = Math.max(...EFFECTS.map(val), 1e-9);
+    $("#bars").innerHTML = EFFECTS.map(e => {
+      const pct = 100 * val(e) / max * 0.78;   // leave room for the label
+      return `<div class="bar-row"><span>${e}</span><div class="bar-track">
+        <div class="bar ${e === "Direct" ? "direct" : ""}" style="width:${pct}%"></div>
+        <span class="bar-val" style="left:${pct}%">${m.fmt(val(e))}</span></div></div>`;
+    }).join("");
+  }
+
+  function downloadCSV() {
+    if (!last) return;
+    const head = ["state", "build_years", "includes_self_employed", "industry_code", "industry", "effect", "job_years", "jobs_per_year",
+                  "labor_income_musd", "value_added_musd", "output_musd"];
+    const lines = [head.join(",")];
+    last.rows.forEach(r => EFFECTS.forEach(e => {
+      const v = r[e];
+      if (Math.abs(v.output) < 1e-9) return;
+      lines.push([last.state, last.years, last.se, r.code, `"${r.name.replace(/"/g, '""')}"`, e,
+                  v.jobs.toFixed(2), (v.jobs / last.years).toFixed(2),
+                  v.labor.toFixed(4), v.va.toFixed(4), v.output.toFixed(4)].join(","));
+    }));
+    const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+    const a = Object.assign(document.createElement("a"),
+      { href: URL.createObjectURL(blob), download: `impact_${last.state}.csv` });
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  // ---- Shareable URL: #PA/usd/4y/23:450,332:500@20 ----------------------
+  // code:amount, with @pct when less than 100% is spent in-state. The years
+  // segment is optional so older links still work; "/se0" marks wage and
+  // salary jobs only.
+
+  function writeHash(f) {
+    const lines = f.lines.map(l => `${l.code}:${l.amount}` + (l.pct < 100 ? `@${l.pct}` : "")).join(",");
+    history.replaceState(null, "", `#${f.state}/${f.mode}/${f.years}y/${lines}` + (f.se ? "" : "/se0"));
+  }
+  function readHash() {
+    const parts = decodeURIComponent(location.hash.slice(1)).split("/");
+    const [state, m] = parts;
+    if (!state || !meta.states.some(s => s.code === state)) return null;
+    const yearPart = parts.find(p => /^[\d.]+y$/.test(p));
+    const years = yearPart ? parseFloat(yearPart) : 1;
+    const list = parts.slice(2).find(p => p !== yearPart && p !== "se0") || "";
+    const codes = new Set(meta.industries.map(i => i.code));
+    const lines = list.split(",").map(p => p.match(/^([^:]+):([\d.]+)(?:@([\d.]+))?$/)).filter(Boolean)
+      .map(([, code, a, pct]) => ({ code, amount: +a, pct: pct === undefined ? 100 : Math.min(+pct, 100) }))
+      .filter(l => codes.has(l.code) && l.amount > 0);
+    return { state, mode: m === "jobs" ? "jobs" : "usd", years: years > 0 ? years : 1, se: !parts.includes("se0"), lines };
+  }
+
+  // ---- Events --------------------------------------------------------------
+
+  $("#form").addEventListener("submit", e => { e.preventDefault(); run(); });
+  $("#add").addEventListener("click", () => addLine("23", ""));
+  $$("[data-mode]").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+  $$("[data-metric]").forEach(b => b.addEventListener("click", () => {
+    metric = b.dataset.metric;
+    $$("[data-metric]").forEach(x => x.setAttribute("aria-pressed", x === b));
+    if (last) renderBars();
+  }));
+  $("#download").addEventListener("click", downloadCSV);
+
+  init().catch(err => { $("#error").textContent = "Could not load model data: " + err.message; });
+})();
+</script>
+</body>
+</html>

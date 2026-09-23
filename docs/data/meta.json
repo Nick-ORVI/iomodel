@@ -1,0 +1,567 @@
+{
+  "year": 2023,
+  "flq_delta": 0.1,
+  "industries": [
+    {
+      "code": "111CA",
+      "name": "Farms",
+      "sector": "Agriculture, forestry & fishing"
+    },
+    {
+      "code": "113FF",
+      "name": "Forestry, fishing, and related activities",
+      "sector": "Agriculture, forestry & fishing"
+    },
+    {
+      "code": "211",
+      "name": "Oil and gas extraction",
+      "sector": "Mining"
+    },
+    {
+      "code": "212",
+      "name": "Mining, except oil and gas",
+      "sector": "Mining"
+    },
+    {
+      "code": "213",
+      "name": "Support activities for mining",
+      "sector": "Mining"
+    },
+    {
+      "code": "22",
+      "name": "Utilities",
+      "sector": "Utilities"
+    },
+    {
+      "code": "23",
+      "name": "Construction",
+      "sector": "Construction"
+    },
+    {
+      "code": "321",
+      "name": "Wood products",
+      "sector": "Manufacturing"
+    },
+    {
+      "code": "327",
+      "name": "Nonmetallic mineral products",
+      "sector": "Manufacturing"
+    },
+    {
+      "code": "331",
+      "name": "Primary metals",
+      "sector": "Manufacturing"
+    },
+    {
+      "code": "332",
+      "name": "Fabricated metal products",
+      "sector": "Manufacturing"
+    },
+    {
+      "code": "333",
+      "name": "Machinery",
+      "sector": "Manufacturing"
+    },
+    {
+      "code": "334",
+      "name": "Computer and electronic products",
+      "sector": "Manufacturing"
+    },
+    {
+      "code": "335",
+      "name": "Electrical equipment, appliances, and components",
+      "sector": "Manufacturing"
+    },
+    {
+      "code": "3361MV",
+      "name": "Motor vehicles, bodies and trailers, and parts",
+      "sector": "Manufacturing"
+    },
+    {
+      "code": "3364OT",
+      "name": "Other transportation equipment",
+      "sector": "Manufacturing"
+    },
+    {
+      "code": "337",
+      "name": "Furniture and related products",
+      "sector": "Manufacturing"
+    },
+    {
+      "code": "339",
+      "name": "Miscellaneous manufacturing",
+      "sector": "Manufacturing"
+    },
+    {
+      "code": "311FT",
+      "name": "Food and beverage and tobacco products",
+      "sector": "Manufacturing"
+    },
+    {
+      "code": "313TT",
+      "name": "Textile mills and textile product mills",
+      "sector": "Manufacturing"
+    },
+    {
+      "code": "315AL",
+      "name": "Apparel and leather and allied products",
+      "sector": "Manufacturing"
+    },
+    {
+      "code": "322",
+      "name": "Paper products",
+      "sector": "Manufacturing"
+    },
+    {
+      "code": "323",
+      "name": "Printing and related support activities",
+      "sector": "Manufacturing"
+    },
+    {
+      "code": "324",
+      "name": "Petroleum and coal products",
+      "sector": "Manufacturing"
+    },
+    {
+      "code": "325",
+      "name": "Chemical products",
+      "sector": "Manufacturing"
+    },
+    {
+      "code": "326",
+      "name": "Plastics and rubber products",
+      "sector": "Manufacturing"
+    },
+    {
+      "code": "42",
+      "name": "Wholesale trade",
+      "sector": "Wholesale trade"
+    },
+    {
+      "code": "441",
+      "name": "Motor vehicle and parts dealers",
+      "sector": "Retail trade"
+    },
+    {
+      "code": "445",
+      "name": "Food and beverage stores",
+      "sector": "Retail trade"
+    },
+    {
+      "code": "452",
+      "name": "General merchandise stores",
+      "sector": "Retail trade"
+    },
+    {
+      "code": "4A0",
+      "name": "Other retail",
+      "sector": "Retail trade"
+    },
+    {
+      "code": "481",
+      "name": "Air transportation",
+      "sector": "Transportation & warehousing"
+    },
+    {
+      "code": "482",
+      "name": "Rail transportation",
+      "sector": "Transportation & warehousing"
+    },
+    {
+      "code": "483",
+      "name": "Water transportation",
+      "sector": "Transportation & warehousing"
+    },
+    {
+      "code": "484",
+      "name": "Truck transportation",
+      "sector": "Transportation & warehousing"
+    },
+    {
+      "code": "485",
+      "name": "Transit and ground passenger transportation",
+      "sector": "Transportation & warehousing"
+    },
+    {
+      "code": "486",
+      "name": "Pipeline transportation",
+      "sector": "Transportation & warehousing"
+    },
+    {
+      "code": "487OS",
+      "name": "Other transportation and support activities",
+      "sector": "Transportation & warehousing"
+    },
+    {
+      "code": "493",
+      "name": "Warehousing and storage",
+      "sector": "Transportation & warehousing"
+    },
+    {
+      "code": "511",
+      "name": "Publishing industries, except internet (includes software)",
+      "sector": "Information"
+    },
+    {
+      "code": "512",
+      "name": "Motion picture and sound recording industries",
+      "sector": "Information"
+    },
+    {
+      "code": "513",
+      "name": "Broadcasting and telecommunications",
+      "sector": "Information"
+    },
+    {
+      "code": "514",
+      "name": "Data processing, internet publishing, and other information services",
+      "sector": "Information"
+    },
+    {
+      "code": "521CI",
+      "name": "Federal Reserve banks, credit intermediation, and related activities",
+      "sector": "Finance & insurance"
+    },
+    {
+      "code": "523",
+      "name": "Securities, commodity contracts, and investments",
+      "sector": "Finance & insurance"
+    },
+    {
+      "code": "524",
+      "name": "Insurance carriers and related activities",
+      "sector": "Finance & insurance"
+    },
+    {
+      "code": "525",
+      "name": "Funds, trusts, and other financial vehicles",
+      "sector": "Finance & insurance"
+    },
+    {
+      "code": "HS",
+      "name": "Housing",
+      "sector": "Real estate & rental"
+    },
+    {
+      "code": "ORE",
+      "name": "Other real estate",
+      "sector": "Real estate & rental"
+    },
+    {
+      "code": "532RL",
+      "name": "Rental and leasing services and lessors of intangible assets",
+      "sector": "Real estate & rental"
+    },
+    {
+      "code": "5411",
+      "name": "Legal services",
+      "sector": "Professional & business services"
+    },
+    {
+      "code": "5415",
+      "name": "Computer systems design and related services",
+      "sector": "Professional & business services"
+    },
+    {
+      "code": "5412OP",
+      "name": "Miscellaneous professional, scientific, and technical services",
+      "sector": "Professional & business services"
+    },
+    {
+      "code": "55",
+      "name": "Management of companies and enterprises",
+      "sector": "Professional & business services"
+    },
+    {
+      "code": "561",
+      "name": "Administrative and support services",
+      "sector": "Professional & business services"
+    },
+    {
+      "code": "562",
+      "name": "Waste management and remediation services",
+      "sector": "Professional & business services"
+    },
+    {
+      "code": "61",
+      "name": "Educational services",
+      "sector": "Educational services"
+    },
+    {
+      "code": "621",
+      "name": "Ambulatory health care services",
+      "sector": "Health care & social assistance"
+    },
+    {
+      "code": "622",
+      "name": "Hospitals",
+      "sector": "Health care & social assistance"
+    },
+    {
+      "code": "623",
+      "name": "Nursing and residential care facilities",
+      "sector": "Health care & social assistance"
+    },
+    {
+      "code": "624",
+      "name": "Social assistance",
+      "sector": "Health care & social assistance"
+    },
+    {
+      "code": "711AS",
+      "name": "Performing arts, spectator sports, museums, and related activities",
+      "sector": "Arts, recreation, accommodation & food"
+    },
+    {
+      "code": "713",
+      "name": "Amusements, gambling, and recreation industries",
+      "sector": "Arts, recreation, accommodation & food"
+    },
+    {
+      "code": "721",
+      "name": "Accommodation",
+      "sector": "Arts, recreation, accommodation & food"
+    },
+    {
+      "code": "722",
+      "name": "Food services and drinking places",
+      "sector": "Arts, recreation, accommodation & food"
+    },
+    {
+      "code": "81",
+      "name": "Other services, except government",
+      "sector": "Other services"
+    },
+    {
+      "code": "GFGD",
+      "name": "Federal general government (defense)",
+      "sector": "Government"
+    },
+    {
+      "code": "GFGN",
+      "name": "Federal general government (nondefense)",
+      "sector": "Government"
+    },
+    {
+      "code": "GFE",
+      "name": "Federal government enterprises",
+      "sector": "Government"
+    },
+    {
+      "code": "GSLG",
+      "name": "State and local general government",
+      "sector": "Government"
+    },
+    {
+      "code": "GSLE",
+      "name": "State and local government enterprises",
+      "sector": "Government"
+    }
+  ],
+  "states": [
+    {
+      "code": "AL",
+      "name": "Alabama"
+    },
+    {
+      "code": "AK",
+      "name": "Alaska"
+    },
+    {
+      "code": "AZ",
+      "name": "Arizona"
+    },
+    {
+      "code": "AR",
+      "name": "Arkansas"
+    },
+    {
+      "code": "CA",
+      "name": "California"
+    },
+    {
+      "code": "CO",
+      "name": "Colorado"
+    },
+    {
+      "code": "CT",
+      "name": "Connecticut"
+    },
+    {
+      "code": "DE",
+      "name": "Delaware"
+    },
+    {
+      "code": "DC",
+      "name": "District of Columbia"
+    },
+    {
+      "code": "FL",
+      "name": "Florida"
+    },
+    {
+      "code": "GA",
+      "name": "Georgia"
+    },
+    {
+      "code": "HI",
+      "name": "Hawaii"
+    },
+    {
+      "code": "ID",
+      "name": "Idaho"
+    },
+    {
+      "code": "IL",
+      "name": "Illinois"
+    },
+    {
+      "code": "IN",
+      "name": "Indiana"
+    },
+    {
+      "code": "IA",
+      "name": "Iowa"
+    },
+    {
+      "code": "KS",
+      "name": "Kansas"
+    },
+    {
+      "code": "KY",
+      "name": "Kentucky"
+    },
+    {
+      "code": "LA",
+      "name": "Louisiana"
+    },
+    {
+      "code": "ME",
+      "name": "Maine"
+    },
+    {
+      "code": "MD",
+      "name": "Maryland"
+    },
+    {
+      "code": "MA",
+      "name": "Massachusetts"
+    },
+    {
+      "code": "MI",
+      "name": "Michigan"
+    },
+    {
+      "code": "MN",
+      "name": "Minnesota"
+    },
+    {
+      "code": "MS",
+      "name": "Mississippi"
+    },
+    {
+      "code": "MO",
+      "name": "Missouri"
+    },
+    {
+      "code": "MT",
+      "name": "Montana"
+    },
+    {
+      "code": "NE",
+      "name": "Nebraska"
+    },
+    {
+      "code": "NV",
+      "name": "Nevada"
+    },
+    {
+      "code": "NH",
+      "name": "New Hampshire"
+    },
+    {
+      "code": "NJ",
+      "name": "New Jersey"
+    },
+    {
+      "code": "NM",
+      "name": "New Mexico"
+    },
+    {
+      "code": "NY",
+      "name": "New York"
+    },
+    {
+      "code": "NC",
+      "name": "North Carolina"
+    },
+    {
+      "code": "ND",
+      "name": "North Dakota"
+    },
+    {
+      "code": "OH",
+      "name": "Ohio"
+    },
+    {
+      "code": "OK",
+      "name": "Oklahoma"
+    },
+    {
+      "code": "OR",
+      "name": "Oregon"
+    },
+    {
+      "code": "PA",
+      "name": "Pennsylvania"
+    },
+    {
+      "code": "RI",
+      "name": "Rhode Island"
+    },
+    {
+      "code": "SC",
+      "name": "South Carolina"
+    },
+    {
+      "code": "SD",
+      "name": "South Dakota"
+    },
+    {
+      "code": "TN",
+      "name": "Tennessee"
+    },
+    {
+      "code": "TX",
+      "name": "Texas"
+    },
+    {
+      "code": "UT",
+      "name": "Utah"
+    },
+    {
+      "code": "VT",
+      "name": "Vermont"
+    },
+    {
+      "code": "VA",
+      "name": "Virginia"
+    },
+    {
+      "code": "WA",
+      "name": "Washington"
+    },
+    {
+      "code": "WV",
+      "name": "West Virginia"
+    },
+    {
+      "code": "WI",
+      "name": "Wisconsin"
+    },
+    {
+      "code": "WY",
+      "name": "Wyoming"
+    }
+  ]
+}

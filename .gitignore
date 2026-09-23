@@ -1,0 +1,10 @@
+.Rproj.user/
+.Rhistory
+.RData
+.DS_Store
+# Raw downloads and R model caches are rebuilt by run_all.R.
+# docs/data/ IS committed: the web calculator needs it.
+/data/
+
+# API keys (never commit)
+.Renviron
