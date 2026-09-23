@@ -13,6 +13,7 @@
 
 source("R/00_config.R")
 source("R/mappings.R")
+source("R/calibrate_output.R")
 
 national <- readRDS(file.path(model_dir, "national.rds"))
 ind      <- national$industries
@@ -121,7 +122,7 @@ read_bea_regional <- function(table) {
 }
 
 # Values in $ millions. (D) suppressed cells become NA.
-read_sagdp <- function(table) {
+read_sagdp <- function(table, yr = year) {
   d <- read_bea_regional(table) |>
     filter(GeoFIPS %in% state_fips, as.integer(LineCode) <= 86)
   unit_scale <- if (all(d$Unit == "Thousands of dollars")) 1e-3 else 1
@@ -129,7 +130,7 @@ read_sagdp <- function(table) {
     transmute(state = names(state_fips)[match(GeoFIPS, state_fips)],
               line  = as.integer(LineCode),
               depth = nchar(Description) - nchar(str_trim(Description, "left")),
-              value = suppressWarnings(as.numeric(.data[[as.character(year)]])) * unit_scale)
+              value = suppressWarnings(as.numeric(.data[[as.character(yr)]])) * unit_scale)
 }
 
 # Proxy for each BEA industry's size in a state: its share of national jobs
@@ -183,8 +184,8 @@ fill_sagdp <- function(d, w) {
     summarise(value = sum(value), .groups = "drop")
 }
 
-state_accounts <- function(table, national_total) {
-  sagdp   <- read_sagdp(table)
+state_accounts <- function(table, national_total, yr = year) {
+  sagdp   <- read_sagdp(table, yr)
   weights <- state_share |> mutate(weight = share * national_total[bea])
   map(names(state_fips), \(st) {
     fill_sagdp(filter(sagdp, state == st), filter(weights, state == st)) |>
@@ -195,6 +196,16 @@ state_accounts <- function(table, national_total) {
 message("Filling BEA state GDP and compensation")
 va   <- state_accounts("SAGDP2", national$va)   |> rename(va = value)
 comp <- state_accounts("SAGDP4", national$comp) |> rename(comp = value)
+
+# Output calibration factors, measured in the Economic Census year
+factors <- tibble(state = character(), bea = character(), factor = numeric())
+if (calibrate_output) {
+  ec_year <- year - (year - 2) %% 5
+  message("Calibrating output to the ", ec_year, " Economic Census")
+  va_ec   <- state_accounts("SAGDP2", national$va, yr = ec_year) |> rename(va = value)
+  factors <- output_factors(va_ec, ec_year)
+  saveRDS(factors, file.path(model_dir, "output_factors.rds"))
+}
 
 # ---- Household spending ratio ------------------------------------------------
 # Of each $ of compensation: drop contributions for government social
@@ -308,13 +319,16 @@ state_data <- jobs |>
   left_join(comp, by = c("state", "bea")) |>
   mutate(va     = pmax(coalesce(va, 0), 0),
          comp   = pmax(coalesce(comp, 0), 0),
-         output = va * output_per_va[bea]) |>
+         output_unadjusted = va * output_per_va[bea]) |>
+  left_join(select(factors, state, bea, factor), by = c("state", "bea")) |>
+  # Output can't be smaller than value added, which is part of it
+  mutate(output = pmax(output_unadjusted * coalesce(factor, 1), va * 1.02)) |>
   left_join(spend, by = "state") |>
   left_join(prop_jobs, by = c("state", "bea")) |>
   left_join(prop_income, by = c("state", "bea")) |>
   mutate(prop_jobs   = coalesce(prop_jobs, 0),
          prop_income = pmax(coalesce(prop_income, 0), 0)) |>   # losses don't lower spending
-  select(state, bea, output, va, comp, jobs, prop_jobs, prop_income, spend_ratio)
+  select(state, bea, output, output_unadjusted, va, comp, jobs, prop_jobs, prop_income, spend_ratio)
 
 # QCEW doesn't cover railroads (they report to the Railroad Retirement
 # Board), so give each state national CES rail jobs in proportion to its

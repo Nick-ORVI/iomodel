@@ -25,6 +25,13 @@ year <- 2023
 # RIMS II or IMPLAN multipliers for your state if you have them.
 flq_delta <- 0.1
 
+# Calibrate each state's estimated output (state GDP x national output/GDP
+# ratio) to the Economic Census, which reports actual sales by state and
+# industry. Factors are bounded so no single state-industry output moves by
+# more than these multiples. See R/calibrate_output.R.
+calibrate_output   <- TRUE
+calibration_bounds <- c(0.5, 2)
+
 # API keys live in the project's git-ignored .Renviron. R reads it at
 # startup when launched from this folder; this covers other launch paths.
 if (file.exists(".Renviron")) readRenviron(".Renviron")

@@ -36,11 +36,19 @@ build_state_model <- function(st, national, state_data, delta = flq_delta,
   slq <- (x / sum(x)) / (national$g / sum(national$g))
   lambda <- log2(1 + sum(x) / sum(national$g))^delta
 
+  # Where calibration gave a state industry a different output/GDP ratio than
+  # the nation, scale its purchased inputs per $ so inputs + value added
+  # still add up to output (same mix of inputs, different total).
+  nat_va_ratio <- national$va / national$g
+  st_va_ratio  <- ifelse(x > 0, pmin(s$va / x, 0.98), nat_va_ratio)
+  input_scale  <- pmin(pmax((1 - st_va_ratio) / (1 - nat_va_ratio), 0.25), 2)
+  A_tech <- sweep(national$A, 2, input_scale, "*")
+
   cilq <- outer(slq, slq, "/")
   cilq[, slq == 0] <- slq               # industry absent from state: fall back to SLQ
   diag(cilq) <- slq
   flq <- pmin(lambda * cilq, 1)
-  A <- national$A * flq
+  A <- A_tech * flq
 
   per_output <- \(v, us_v) {
     nat <- ifelse(us$output > 0, us_v / us$output, 0)

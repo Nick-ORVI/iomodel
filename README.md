@@ -70,7 +70,8 @@ After changing the model (new year, different `flq_delta`), rerun
    - Jobs: BLS QCEW annual averages by NAICS, mapped to BEA industries
      (railroads from BLS CES, since QCEW doesn't cover them).
    - Value added and compensation: BEA SAGDP2 / SAGDP4.
-   - Output: state value added × national output/value-added ratio.
+   - Output: state value added × national output/value-added ratio, then
+     calibrated to the Economic Census (below).
    - Suppressed cells in both sources are filled with what's left of the
      published parent total, split by a size proxy.
    - Self-employment: BEA's state total of proprietors' jobs (SAINC4) is split
@@ -89,6 +90,26 @@ After changing the model (new year, different `flq_delta`), rerun
    in-state share of each industry's goods.
 
 Direct = the spending; Indirect = Type I − direct; Induced = Type II − Type I.
+
+**Output calibration** (`R/calibrate_output.R`, on by default via
+`calibrate_output` in `R/00_config.R`). BEA doesn't publish output by state,
+so the starting estimate gives every state an industry's national
+output/GDP ratio. The Economic Census reports actual sales by state and
+industry. For each industry the census covers well, the model compares each
+state's share of national GDP with its share of national sales, both for
+2022 so price swings cancel. The ratio then rescales the state's 2023 output.
+Adjustments are held to 0.5×–2× (renormalizing can push a few slightly past
+2×), and each industry's national total stays the same. A state industry
+that ends up with more GDP per $ of output buys proportionally fewer inputs,
+so its books still balance. Uncovered industries keep the starting estimate:
+farms, forestry, rail, funds, management of companies, most schools,
+housing and government.
+
+Before calibration about 40% of model output was within ±10% of the census
+share; after, 99%. The biggest corrections were in chemicals, electronics,
+oil & gas, pipelines and telecom, where profit margins and headquarters
+accounting differ a lot by state. `R/06_output_check.R` writes
+`output/output_check_2023.csv` with every factor and the before/after fit.
 
 Every model is built two ways: payroll (wage & salary) jobs only, and with
 the self-employed added as IMPLAN does. Adding them raises jobs, labor income,
@@ -128,6 +149,7 @@ the web calculator has a checkbox for it.
 | BLS CES | CES4348200001 | rail employment |
 | BEA Regional | SAINC5N, SAINC6N, CAEMP25N | proprietors' income; farm vs. nonfarm proprietors |
 | Census | Nonemployer Statistics (API) | self-employment by state & industry |
+| Census | 2022 Economic Census (API) | calibrate state output by industry |
 
 To update the year, change `year` in `R/00_config.R` and rerun `run_all.R`.
 All four sources need to have published that year.

@@ -101,4 +101,27 @@ if (!file.exists(nes_file)) {
   write_csv(nes, nes_file)
 }
 
+# ---- Census Economic Census --------------------------------------------------
+# Sales / receipts by state and NAICS from the most recent Economic Census
+# (years ending in 2 or 7). Used only to check the model's estimated output.
+
+ec_year <- year - (year - 2) %% 5
+ec_file <- file.path(raw_dir, sprintf("economic_census_%d.csv", ec_year))
+if (!file.exists(ec_file)) {
+  key <- Sys.getenv("CENSUS_API_KEY")
+  if (key == "") stop("Set CENSUS_API_KEY in .Renviron")
+  message("Downloading ", ec_year, " Economic Census")
+  ec <- map(c("state:*", "us:1"), \(geo) {
+    rows <- httr2::request(sprintf("https://api.census.gov/data/%d/ecnbasic", ec_year)) |>
+      httr2::req_url_query(get = "NAICS2022,RCPTOT,EMP", `for` = geo,
+                           TAXSTAT = "00", TYPOP = "00", key = key) |>
+      httr2::req_perform() |>
+      httr2::resp_body_json(simplifyVector = TRUE)
+    out <- as_tibble(rows[-1, , drop = FALSE], .name_repair = \(x) rows[1, ])
+    if (geo == "us:1") out <- rename(out, state = us) |> mutate(state = "US")
+    out
+  }) |> list_rbind()
+  write_csv(ec, ec_file)
+}
+
 message("Raw data ready in ", raw_dir)
