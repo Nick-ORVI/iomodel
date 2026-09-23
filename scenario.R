@@ -63,7 +63,7 @@ p <- ggplot(plot_df, aes(x = jobs, y = effect, fill = effect == "Direct")) +
                        scenario_label),
     subtitle = sprintf("Total: %s jobs", comma(sum(plot_df$jobs), 1)),
     x = NULL, y = NULL,
-    caption  = sprintf(paste0("Source: ORVI input-output model built from BEA %d Input-Output ",
+    caption  = sprintf(paste0("Source: JORVI input-output model built from BEA %d Input-Output ",
                               "Accounts, BEA regional accounts, and BLS QCEW"), model$year)
   ) +
   theme_minimal(base_size = 12) +

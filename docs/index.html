@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>State Economic Impact Calculator</title>
-<meta name="description" content="Estimate the direct, indirect, and induced jobs, income, and output created by new spending in any industry, in any U.S. state.">
+<title>JORVI Impact Calculator</title>
+<meta name="description" content="JORVI (Jobs, Output &amp; Regional Value Impacts): estimate the direct, indirect, and induced jobs, income, and output created by new spending in any industry, in any U.S. state.">
 <style>
   :root {
     --navy: #0B1575;
@@ -55,7 +55,8 @@
 
   header.hero { padding: 56px 0 28px; }
   .eyebrow { color: var(--muted); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; margin: 0 0 10px; }
-  h1 { color: var(--navy); font-size: clamp(30px, 5vw, 44px); line-height: 1.1; margin: 0 0 14px; letter-spacing: -.01em; }
+  h1 { color: var(--navy); font-size: clamp(36px, 6vw, 52px); line-height: 1.05; margin: 0 0 6px; letter-spacing: -.01em; }
+  .tagline { font-size: clamp(18px, 2.6vw, 22px); font-weight: 600; margin: 0 0 16px; }
   .lede { font-size: 18px; color: var(--muted); max-width: 680px; margin: 0; }
   .lede strong { color: var(--text); font-weight: 600; }
 
@@ -150,6 +151,7 @@
     .card { padding: 18px; }
     .kpi .v { font-size: 24px; }
     th, td { padding: 8px 5px; font-size: 13px; }
+    #by-line .opt, #by-line .mini { display: none; }
     th { font-size: 11px; letter-spacing: 0; }
   }
   @media (max-width: 420px) {
@@ -166,8 +168,9 @@
 <div class="wrap">
 
 <header class="hero">
-  <p class="eyebrow">Input-output model &middot; all 50 states + DC</p>
-  <h1>State Economic Impact Calculator</h1>
+  <p class="eyebrow">State economic impact calculator &middot; all 50 states + DC</p>
+  <h1>JORVI</h1>
+  <p class="tagline">Jobs, Output &amp; Regional Value Impacts</p>
   <p class="lede">Estimate how new spending in one industry ripples through a state's economy. You get <strong>direct</strong> jobs in that industry, <strong>indirect</strong> jobs at its in-state suppliers, and <strong>induced</strong> jobs supported when workers spend their paychecks.</p>
 </header>
 
@@ -243,6 +246,12 @@
     </div>
   </div>
 
+  <div class="card" id="by-line-card" style="margin-top:16px" hidden>
+    <h2>Direct jobs by spending line</h2>
+    <p class="sub" id="by-line-sub"></p>
+    <div class="table-scroll"><table id="by-line"></table></div>
+  </div>
+
   <div class="card" style="margin-top:16px">
     <h2>Industries gaining indirect &amp; induced jobs</h2>
     <p class="sub" id="industry-sub">The top 15 industries by spillover jobs. Direct jobs are excluded.</p>
@@ -287,7 +296,7 @@
 </main>
 
 <footer>
-  Built from public BEA and BLS data (<span class="yr"></span> accounts). All results are model estimates.
+  JORVI (Jobs, Output &amp; Regional Value Impacts) is built from public BEA, BLS, and Census data (<span class="yr"></span> accounts). All results are model estimates.
 </footer>
 </div>
 
@@ -384,12 +393,22 @@
     const n = meta.industries.length;
     const idx = Object.fromEntries(meta.industries.map((d, i) => [d.code, i]));
     const y = new Array(n).fill(0);
-    for (const l of lines) {
+    const spends = lines.map(l => {
       const i = idx[l.code];
       const spend = mode === "jobs" ? (jobsCoef[i] > 0 ? l.amount / jobsCoef[i] : 0)
                                     : l.amount * l.pct / 100;
       y[i] += spend;
-    }
+      return spend;
+    });
+
+    // Each line's direct jobs, and all jobs it supports (direct + indirect +
+    // induced). The model is linear, so the lines add up to the totals.
+    const byLine = lines.map((l, k) => {
+      const i = idx[l.code];
+      const totalPerDollar = L2.reduce((sum, row, r) => sum + row[i] * jobsCoef[r], 0);
+      return { name: meta.industries[i].name, amount: l.amount, pct: l.pct, spend: spends[k],
+               direct: spends[k] * jobsCoef[i], total: spends[k] * totalPerDollar };
+    });
     const x1 = matVec(model.L1, y), x2 = matVec(L2, y);
     const rows = meta.industries.map((d, i) => {
       const out = { Direct: y[i], Indirect: x1[i] - y[i], Induced: x2[i] - x1[i] };
@@ -407,7 +426,7 @@
     rows.forEach(r => EFFECTS.forEach(e => Object.keys(METRICS).forEach(k => {
       summary[e][k] += r[e][k]; summary.Total[k] += r[e][k];
     })));
-    return { rows, summary };
+    return { rows, summary, byLine };
   }
 
   // ---- Run -----------------------------------------------------------------
@@ -491,6 +510,8 @@
         `<td>${fmtM(s[e].labor)}</td><td>${fmtM(s[e].va)}</td><td>${fmtM(s[e].output)}</td></tr>`).join("") +
       `</tbody>`;
 
+    renderByLine();
+
     $("#industry-sub").textContent = `The top 15 industries by spillover ${multiYear ? "jobs per year" : "jobs"}. Direct jobs are excluded.`;
     const spill = rows.map(r => ({ name: r.name, ind: r.Indirect.jobs / years, inu: r.Induced.jobs / years }))
       .map(r => ({ ...r, tot: r.ind + r.inu }))
@@ -506,6 +527,39 @@
       `Every 100 direct jobs support about ${fmtInt(100 * (t.jobs / s.Direct.jobs - 1))} more in ${stateName}. ` +
       `${last.se ? "Jobs include the self-employed; labor income includes proprietors' income." : "Wage and salary jobs only; labor income is employee compensation."} ` +
       `Model year ${meta.year}; FLQ δ = ${meta.flq_delta}.`;
+  }
+
+  function renderByLine() {
+    const { byLine, years, mode } = last;
+    const card = $("#by-line-card");
+    card.hidden = byLine.length < 2;
+    if (card.hidden) return;
+
+    const multiYear = years !== 1;
+    const per = multiYear ? " per year" : "";
+    $("#by-line-sub").textContent =
+      `Direct jobs${per} created by each line you entered, and all the jobs${per} each line supports ` +
+      `(direct, indirect, and induced)${multiYear ? ` over the ${years}-year build` : ""}.`;
+
+    const directTotal = byLine.reduce((a, l) => a + l.direct, 0);
+    const maxDirect = Math.max(...byLine.map(l => l.direct), 1e-9);
+    const usd = mode !== "jobs";
+    const sum = key => byLine.reduce((a, l) => a + l[key], 0);
+    const share = v => directTotal > 0 ? `${Math.round(100 * v / directTotal)}%` : "–";
+
+    $("#by-line").innerHTML =
+      `<thead><tr><th>Industry</th>` +
+      (usd ? `<th class="opt">Entered</th><th>In-state</th>` : "") +
+      `<th>Direct<span class="opt"> jobs</span>${multiYear ? "/yr" : ""}</th><th class="opt">Share</th>` +
+      `<th>Total<span class="opt"> jobs</span>${multiYear ? "/yr" : ""}</th></tr></thead><tbody>` +
+      byLine.map(l =>
+        `<tr><td class="ind"><span class="mini" style="width:${Math.max(2, 60 * l.direct / maxDirect)}px;background:var(--navy)"></span>${l.name}</td>` +
+        (usd ? `<td class="opt">${fmtM(l.amount)}</td><td>${fmtM(l.spend)}</td>` : "") +
+        `<td>${fmtInt(l.direct / years)}</td><td class="opt">${share(l.direct)}</td><td><strong>${fmtInt(l.total / years)}</strong></td></tr>`
+      ).join("") +
+      `<tr class="total"><td>Total</td>` +
+      (usd ? `<td class="opt">${fmtM(sum("amount"))}</td><td>${fmtM(sum("spend"))}</td>` : "") +
+      `<td>${fmtInt(directTotal / years)}</td><td class="opt">100%</td><td>${fmtInt(sum("total") / years)}</td></tr></tbody>`;
   }
 
   function renderBars() {

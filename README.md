@@ -1,4 +1,7 @@
-# State input-output model
+# JORVI: Jobs, Output & Regional Value Impacts
+
+A state input-output model and web calculator:
+**https://nick-orvi.github.io/iomodel/**
 
 Estimates the **direct, indirect, and induced** jobs, labor income, value
 added, and output from new spending in any industry, for all 50 states and
